@@ -1,0 +1,95 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@SpringBootApplication
+public class CustomTrainingApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CustomTrainingApiApplication.class, args);
+    }
+}
+
+@Entity
+class CustomTraining {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String deficiencyType;
+    private String trainingDescription;
+
+    // getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getDeficiencyType() {
+        return deficiencyType;
+    }
+
+    public void setDeficiencyType(String deficiencyType) {
+        this.deficiencyType = deficiencyType;
+    }
+
+    public String getTrainingDescription() {
+        return trainingDescription;
+    }
+
+    public void setTrainingDescription(String trainingDescription) {
+        this.trainingDescription = trainingDescription;
+    }
+}
+
+@Repository
+interface CustomTrainingRepository extends JpaRepository<CustomTraining, Long> {
+    CustomTraining findByDeficiencyType(String deficiencyType);
+}
+
+@Service
+class CustomTrainingService {
+    @Autowired
+    private CustomTrainingRepository customTrainingRepository;
+
+    public CustomTraining getCustomTrainingByDeficiencyType(String deficiencyType) {
+        return customTrainingRepository.findByDeficiencyType(deficiencyType);
+    }
+
+    public CustomTraining createCustomTraining(CustomTraining customTraining) {
+        return customTrainingRepository.save(customTraining);
+    }
+}
+
+@RestController
+class CustomTrainingController {
+    @Autowired
+    private CustomTrainingService customTrainingService;
+
+    @GetMapping("/custom-trainings/{deficiencyType}")
+    public ResponseEntity<CustomTraining> getCustomTrainingByDeficiencyType(@PathVariable String deficiencyType) {
+        CustomTraining customTraining = customTrainingService.getCustomTrainingByDeficiencyType(deficiencyType);
+
+        if (customTraining == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(customTraining);
+    }
+
+    @PostMapping("/custom-trainings")
+    public ResponseEntity<CustomTraining> createCustomTraining(@RequestBody CustomTraining customTraining) {
+        CustomTraining createdTraining = customTrainingService.createCustomTraining(customTraining);
+        return ResponseEntity.ok(createdTraining);
+    }
+}
