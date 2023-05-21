@@ -1,0 +1,97 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@SpringBootApplication
+public class UserRegistrationApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(UserRegistrationApiApplication.class, args);
+    }
+}
+
+@Entity
+class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private double peso;
+    private double altura;
+    private int idade;
+    private String tipoDeficiencia;
+
+    // getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public double getPeso() {
+        return peso;
+    }
+
+    public void setPeso(double peso) {
+        this.peso = peso;
+    }
+
+    public double getAltura() {
+        return altura;
+    }
+
+    public void setAltura(double altura) {
+        this.altura = altura;
+    }
+
+    public int getIdade() {
+        return idade;
+    }
+
+    public void setIdade(int idade) {
+        this.idade = idade;
+    }
+
+    public String getTipoDeficiencia() {
+        return tipoDeficiencia;
+    }
+
+    public void setTipoDeficiencia(String tipoDeficiencia) {
+        this.tipoDeficiencia = tipoDeficiencia;
+    }
+}
+
+@Repository
+interface UserRepository extends JpaRepository<User, Long> {
+}
+
+@Service
+class UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    public User cadastrarUsuario(User user) {
+        return userRepository.save(user);
+    }
+}
+
+@RestController
+class UserController {
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/users")
+    public ResponseEntity<String> cadastrarUsuario(@RequestBody User user) {
+        User savedUser = userService.cadastrarUsuario(user);
+        return ResponseEntity.ok("Usuário cadastrado com sucesso. ID: " + savedUser.getId());
+    }
+}
