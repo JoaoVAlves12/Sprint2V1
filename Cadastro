@@ -1,0 +1,180 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@SpringBootApplication
+public class UserRegistrationApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(UserRegistrationApiApplication.class, args);
+    }
+}
+
+@Entity
+class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private String sobrenome;
+    private String email;
+    private String numeroCelular;
+    private String senha;
+
+    // getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getSobrenome() {
+        return sobrenome;
+    }
+
+    public void setSobrenome(String sobrenome) {
+        this.sobrenome = sobrenome;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getNumeroCelular() {
+        return numeroCelular;
+    }
+
+    public void setNumeroCelular(String numeroCelular) {
+        this.numeroCelular = numeroCelular;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
+}
+
+@Repository
+interface UserRepository extends JpaRepository<User, Long> {
+    User findByEmail(String email);
+}
+
+@Service
+class UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    public User cadastrarUsuario(User user) {
+        return userRepository.save(user);
+    }
+
+    public boolean verificarEmailExistente(String email) {
+        return userRepository.findByEmail(email) != null;
+    }
+}
+
+@RestController
+class UserController {
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody UserRegistrationRequest request) {
+        if (userService.verificarEmailExistente(request.getEmail())) {
+            return ResponseEntity.badRequest().body("O e-mail já está em uso");
+        }
+
+        User user = new User();
+        user.setNome(request.getNome());
+        user.setSobrenome(request.getSobrenome());
+        user.setEmail(request.getEmail());
+        user.setNumeroCelular(request.getNumeroCelular());
+        user.setSenha(request.getSenha());
+
+        User savedUser = userService.cadastrarUsuario(user);
+        return ResponseEntity.ok("Usuário cadastrado com sucesso. ID: " + savedUser.getId());
+    }
+}
+
+class UserRegistrationRequest {
+    private String nome;
+    private String sobrenome;
+    private String email;
+    private String numeroCelular;
+    private String senha;
+    private String repetirSenha;
+
+    // getters and setters
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getSobrenome() {
+        return sobrenome;
+    }
+
+    public void setSobrenome(String sobrenome) {
+        this.sobrenome = sobrenome;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getNumeroCelular() {
+        return numeroCelular;
+    }
+
+    public void setNumeroCelular(String numeroCelular) {
+        this.numeroCelular = numeroCelular;
+    }
+
+    public String getSenha() {
+        return senha;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
+    }
+
+    public String getRepetirSenha() {
+        return repetirSenha;
+    }
+
+    public void setRepetirSenha(String repetirSenha) {
+        this.repetirSenha = repetirSenha;
+    }
+}
